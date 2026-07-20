@@ -1,0 +1,7 @@
+streamlit>=1.32
+pytesseract>=0.3.10
+pillow>=10.0
+pillow-heif>=0.15
+rapidfuzz>=3.6
+pandas>=2.0
+openpyxl>=3.1
