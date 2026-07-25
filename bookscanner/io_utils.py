@@ -18,7 +18,20 @@ def list_images(folder: Path) -> list[Path]:
     )
 
 
-def load_title_sheet(file) -> pd.DataFrame:
-    df = pd.read_excel(file)
-    df = df.dropna(how="all")
-    return df
+def list_sheet_names(file) -> list[str]:
+    return pd.ExcelFile(file).sheet_names
+
+
+def load_title_sheet(file, sheet_name: str | None = None) -> pd.DataFrame:
+    """Load one sheet, or all sheets combined (with a 'Ark' column) if sheet_name is None."""
+    if sheet_name is not None:
+        df = pd.read_excel(file, sheet_name=sheet_name)
+        return df.dropna(how="all")
+
+    sheets = pd.read_excel(file, sheet_name=None)
+    frames = []
+    for name, sheet_df in sheets.items():
+        sheet_df = sheet_df.dropna(how="all")
+        sheet_df.insert(0, "Ark", name)
+        frames.append(sheet_df)
+    return pd.concat(frames, ignore_index=True)
