@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from bookscanner.io_utils import list_images, load_title_sheet
+from bookscanner.io_utils import list_images, list_sheet_names, load_title_sheet
 from bookscanner.matching import classify, find_best_matches
 from bookscanner.ocr import PSM_OPTIONS, TesseractNotFoundError, extract_text
 
@@ -74,7 +74,23 @@ id_col: str | None = None
 
 if titles_file is not None:
     try:
-        titles_df = load_title_sheet(titles_file)
+        sheet_names = list_sheet_names(titles_file)
+    except Exception as exc:  # noqa: BLE001
+        st.error(f"Kunne ikke læse Excel-filen: {exc}")
+        sheet_names = []
+
+    sheet_choice = "(alle ark kombineret)"
+    if len(sheet_names) > 1:
+        sheet_choice = st.selectbox(
+            "Hvilket ark skal bruges?",
+            ["(alle ark kombineret)"] + sheet_names,
+            index=0,
+            help="Titellisten har flere ark - vælg ét, eller kombinér dem alle for at matche på tværs.",
+        )
+
+    try:
+        sheet_arg = None if sheet_choice == "(alle ark kombineret)" else sheet_choice
+        titles_df = load_title_sheet(titles_file, sheet_name=sheet_arg)
     except Exception as exc:  # noqa: BLE001
         st.error(f"Kunne ikke læse Excel-filen: {exc}")
 
@@ -86,10 +102,19 @@ if titles_file is not None:
             0,
         )
         title_col = st.selectbox("Hvilken kolonne indeholder titlen?", columns, index=default_title_idx)
+        default_id_idx = next(
+            (
+                i
+                for i, c in enumerate(columns)
+                if any(k in str(c).lower() for k in ("opstilling", "signatur", "id"))
+            ),
+            None,
+        )
+        id_options = ["(ingen)"] + columns
         id_col = st.selectbox(
             "Valgfri: kolonne med ID/signatur (vises i resultatet)",
-            ["(ingen)"] + columns,
-            index=0,
+            id_options,
+            index=(default_id_idx + 1) if default_id_idx is not None else 0,
         )
         if id_col == "(ingen)":
             id_col = None
