@@ -18,14 +18,17 @@ Der findes to udgaver med samme matching-logik:
 ## Sådan virker det
 
 1. Du peger på en lokal mappe med ét foto per eksemplar (titelbladet).
-2. Du uploader en Excel-fil med den strukturerede titelliste og vælger,
-   hvilken kolonne der indeholder titlen.
+2. Titellisten indlæses automatisk fra en standard-Excel-fil i `src/holdings/`
+   (Python) hhv. `docs/data/` (browser) – du behøver ikke uploade noget selv,
+   men kan uploade en anden fil, hvis du vil bruge en anden liste.
 3. Appen kører OCR på alle fotos i mappen og fuzzy-matcher hver OCR-tekst
    mod alle titler i listen (`rapidfuzz`, `token_set_ratio`), så ekstra tekst
    på titelbladet (forlag, år, udgave osv.) og OCR-støj ikke ødelægger
    matchet.
 4. Resultatet vises som en tabel med status **Sandsynlig dublet**, **Muligvis
    dublet – tjek manuelt** eller **Ingen match**, og kan downloades som CSV.
+   De fulde OCR-genkendte tekster (ikke afkortet) gemmes også i
+   arbejdshukommelsen og kan downloades separat som CSV.
 
 Matchning sker udelukkende på titel (ikke forfatter/år/forlag), for at være
 så robust som muligt over for ufuldstændig OCR.
@@ -80,9 +83,12 @@ Appen åbner i din browser (typisk `http://localhost:8501`).
 
 1. **Fotos**: Indsæt stien til den lokale (synkroniserede) fotomappe.
    Understøtter JPG, PNG, TIFF, BMP og HEIC (iPhone-fotos).
-2. **Titelliste**: Upload en `.xlsx`-fil og vælg titel-kolonnen. Du kan
-   valgfrit også vælge en ID/signatur-kolonne, så resultatet viser, hvilket
-   eksemplar i listen et foto matcher.
+2. **Titelliste**: Ligger der en `.xlsx`-fil i `src/holdings/`, bruges den
+   automatisk som standard-titelliste – du behøver ikke uploade noget selv.
+   Upload en fil i uploadfeltet, hvis du vil bruge en anden liste. Vælg
+   titel-kolonnen (gættes automatisk ud fra kolonnenavnet). Du kan valgfrit
+   også vælge en ID/signatur-kolonne, så resultatet viser, hvilket eksemplar
+   i listen et foto matcher.
 3. **Indstillinger** (i sidepanelet):
    - OCR-sprog (default dansk + engelsk)
    - Sidelayout – prøv "Spredt tekst" hvis titel/forfatter/forlag er spredt
@@ -90,7 +96,10 @@ Appen åbner i din browser (typisk `http://localhost:8501`).
    - Tærskler for "sandsynlig dublet" og "mulig dublet"
    - Hvor mange alternative matches der vises per foto
 4. Klik **Kør matching** og gennemgå resultattabellen. Download som CSV til
-   videre brug, fx til krydstjek eller kassation af dubletter.
+   videre brug, fx til krydstjek eller kassation af dubletter. Der er også
+   en separat download af **alle OCR-genkendte tekster** (den fulde,
+   ikke-afkortede tekst per foto) til manuel gennemgang af OCR-kvaliteten,
+   uafhængigt af matchresultatet.
 
 ## Tips til bedre OCR-resultater
 
@@ -161,6 +170,13 @@ Der kræves ingen secrets, ingen build-step og ingen server-konfiguration.
 - Vil du vendor'e flere sprog lokalt (undgå CDN-afhængighed helt): læg
   `<sprog>.traineddata.gz` i `docs/vendor/lang/` og tilføj sprogkoden til
   `VENDORED_LANGS` i `docs/js/ocr.js`.
+- **Standard-titelliste**: `docs/data/Biblioteksliste_sorted.xlsx` indlæses
+  automatisk ved sideindlæsning, så brugeren ikke behøver uploade noget selv.
+  Upload en fil i UI'et for at bruge en anden liste i stedet. Denne fil er en
+  kopi af `src/holdings/Biblioteksliste_sorted.xlsx` – GitHub Pages serverer
+  kun `docs/`, så filen skal ligge (og opdateres manuelt) begge steder, hvis
+  masterlisten ændres. Vil du bruge en anden standardfil, så erstat filen i
+  `docs/data/` og opdatér `DEFAULT_TITLES_URL` i `docs/js/app.js`.
 
 ### "API-format"
 

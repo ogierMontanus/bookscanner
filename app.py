@@ -13,6 +13,17 @@ from bookscanner.io_utils import list_images, list_sheet_names, load_title_sheet
 from bookscanner.matching import classify, find_best_matches
 from bookscanner.ocr import PSM_OPTIONS, TesseractNotFoundError, extract_text
 
+DEFAULT_TITLES_DIR = Path("src/holdings")
+
+
+def find_default_titles_file() -> Path | None:
+    if DEFAULT_TITLES_DIR.is_dir():
+        candidates = sorted(DEFAULT_TITLES_DIR.glob("*.xlsx"))
+        if candidates:
+            return candidates[0]
+    return None
+
+
 st.set_page_config(page_title="bookscanner - dubletcheck", layout="wide")
 
 st.title("📚 bookscanner – dubletcheck af titelblade")
@@ -70,7 +81,21 @@ if folder_input:
         st.error(str(exc))
 
 st.subheader("2. Struktureret titelliste (Excel)")
-titles_file = st.file_uploader("Upload titelliste (.xlsx)", type=["xlsx"])
+default_titles_path = find_default_titles_file()
+uploaded_titles_file = st.file_uploader(
+    "Upload en anden titelliste (.xlsx) - valgfrit",
+    type=["xlsx"],
+)
+
+titles_file = uploaded_titles_file
+if titles_file is None and default_titles_path is not None:
+    titles_file = default_titles_path
+    st.info(
+        f"Bruger standard-titelliste `{default_titles_path}`. "
+        "Upload en fil ovenfor for at bruge en anden liste."
+    )
+elif titles_file is None:
+    st.warning(f"Ingen standard-titelliste fundet i `{DEFAULT_TITLES_DIR}/` - upload en Excel-fil.")
 
 titles_df: pd.DataFrame | None = None
 title_col: str | None = None
@@ -133,6 +158,7 @@ run = st.button(
 if run and titles_df is not None and title_col:
     titles = titles_df[title_col].astype(str).tolist()
     results_rows = []
+    ocr_rows = []
     progress = st.progress(0.0, text="Starter...")
     errors: list[str] = []
 
@@ -146,6 +172,8 @@ if run and titles_df is not None and title_col:
         except ValueError as exc:
             errors.append(f"{image_path.name}: {exc}")
             continue
+
+        ocr_rows.append({"Foto": image_path.name, "OCR-tekst": ocr_text})
 
         matches = find_best_matches(ocr_text, titles, limit=int(top_n))
         if not matches:
@@ -210,4 +238,15 @@ if run and titles_df is not None and title_col:
             csv,
             file_name="dubletcheck_resultat.csv",
             mime="text/csv",
+        )
+
+    if ocr_rows:
+        ocr_df = pd.DataFrame(ocr_rows)
+        ocr_csv = ocr_df.to_csv(index=False).encode("utf-8-sig")
+        st.download_button(
+            "⬇️ Download OCR-genkendte tekster som CSV",
+            ocr_csv,
+            file_name="ocr_tekster.csv",
+            mime="text/csv",
+            help="Den fulde, ikke-afkortede OCR-tekst per foto - til manuel gennemgang uafhængigt af matchresultatet.",
         )

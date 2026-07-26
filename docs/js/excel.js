@@ -9,6 +9,13 @@
     return XLSX.read(buffer, { type: "array" });
   }
 
+  async function readWorkbookFromUrl(url) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const buffer = await resp.arrayBuffer();
+    return XLSX.read(buffer, { type: "array" });
+  }
+
   function sheetToRows(workbook, sheetName) {
     const sheet = workbook.Sheets[sheetName];
     return XLSX.utils.sheet_to_json(sheet, { defval: "" });
@@ -42,6 +49,7 @@
 
   global.bookscannerExcel = {
     readWorkbook,
+    readWorkbookFromUrl,
     listSheetNames,
     loadTitleRows,
     detectColumn,
