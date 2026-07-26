@@ -57,6 +57,7 @@
 
     <section class="panel">
       <h2>1. Struktureret titelliste (Excel)</h2>
+      <p class="hint">Upload kun hvis du vil bruge en anden liste end standarden nedenfor.</p>
       <input type="file" id="excel-input" accept=".xlsx" />
       <div id="sheet-picker-wrap" class="hidden">
         <label>
@@ -118,7 +119,10 @@
           <tbody id="results-body"></tbody>
         </table>
       </div>
-      <button id="download-csv" class="hidden">⬇️ Download resultat som CSV</button>
+      <div class="button-row">
+        <button id="download-csv" class="hidden">⬇️ Download resultat som CSV</button>
+        <button id="download-ocr-csv" class="hidden">⬇️ Download OCR-genkendte tekster som CSV</button>
+      </div>
     </section>
   </main>
 

@@ -10,12 +10,15 @@
 
   const el = (id) => document.getElementById(id);
 
+  const DEFAULT_TITLES_URL = "data/Biblioteksliste_sorted.xlsx";
+
   const state = {
     workbook: null,
     rows: [],
     columns: [],
     photos: [], // { file, url }
     results: [], // for CSV export
+    ocrTexts: [], // { foto, ocrText } - full, untruncated OCR text per photo
   };
 
   function updateRunButton() {
@@ -37,7 +40,11 @@
     }
   }
 
-  function loadRowsForSelection() {
+  let currentSourceLabel = "";
+
+  function loadRowsForSelection(sourceLabel) {
+    if (sourceLabel !== undefined) currentSourceLabel = sourceLabel;
+
     const sheetSelect = el("sheet-select");
     const sheetChoice =
       sheetSelect.options.length && !el("sheet-picker-wrap").classList.contains("hidden")
@@ -55,8 +62,21 @@
     populateSelect(el("id-col-select"), ["(ingen)"].concat(state.columns), idCol || "(ingen)");
 
     el("column-picker-wrap").classList.remove("hidden");
-    el("titles-status").textContent = `${state.rows.length} titler indlæst.`;
+    el("titles-status").textContent = `${state.rows.length} titler indlæst. ${currentSourceLabel}`;
     updateRunButton();
+  }
+
+  function applyWorkbook(workbook, sourceLabel) {
+    state.workbook = workbook;
+    const sheetNames = excel.listSheetNames(state.workbook);
+
+    if (sheetNames.length > 1) {
+      populateSelect(el("sheet-select"), ["(alle ark kombineret)"].concat(sheetNames), "(alle ark kombineret)");
+      el("sheet-picker-wrap").classList.remove("hidden");
+    } else {
+      el("sheet-picker-wrap").classList.add("hidden");
+    }
+    loadRowsForSelection(sourceLabel);
   }
 
   el("excel-input").addEventListener("change", async (e) => {
@@ -64,23 +84,26 @@
     if (!file) return;
     el("titles-status").textContent = "Indlæser Excel-fil...";
     try {
-      state.workbook = await excel.readWorkbook(file);
-      const sheetNames = excel.listSheetNames(state.workbook);
-
-      if (sheetNames.length > 1) {
-        populateSelect(el("sheet-select"), ["(alle ark kombineret)"].concat(sheetNames), "(alle ark kombineret)");
-        el("sheet-picker-wrap").classList.remove("hidden");
-      } else {
-        el("sheet-picker-wrap").classList.add("hidden");
-      }
-      loadRowsForSelection();
+      const workbook = await excel.readWorkbook(file);
+      applyWorkbook(workbook, `Bruger-uploadet fil: ${file.name}`);
     } catch (err) {
       el("titles-status").textContent = `Kunne ikke læse Excel-filen: ${err.message}`;
     }
   });
 
-  el("sheet-select").addEventListener("change", loadRowsForSelection);
+  el("sheet-select").addEventListener("change", () => loadRowsForSelection());
   el("title-col-select").addEventListener("change", updateRunButton);
+
+  async function loadDefaultTitlesFile() {
+    el("titles-status").textContent = "Indlæser standard-titelliste...";
+    try {
+      const workbook = await excel.readWorkbookFromUrl(DEFAULT_TITLES_URL);
+      applyWorkbook(workbook, `Standard-titelliste (${DEFAULT_TITLES_URL})`);
+    } catch (err) {
+      el("titles-status").textContent =
+        "Ingen standard-titelliste fundet - upload en Excel-fil for at komme i gang.";
+    }
+  }
 
   // --- Photo handling ---------------------------------------------------
 
@@ -206,12 +229,32 @@
 
   el("download-csv").addEventListener("click", downloadCsv);
 
+  function downloadOcrCsv() {
+    const headers = ["Foto", "OCR-tekst"];
+    const lines = [headers.join(",")];
+    for (const r of state.ocrTexts) {
+      lines.push([r.foto, r.ocrText].map(csvEscape).join(","));
+    }
+    const csv = "﻿" + lines.join("\n"); // BOM for Excel/Danish chars
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ocr_tekster.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  el("download-ocr-csv").addEventListener("click", downloadOcrCsv);
+
   async function runMatching() {
     const runButton = el("run-button");
     runButton.disabled = true;
     el("results-body").innerHTML = "";
     state.results = [];
+    state.ocrTexts = [];
     el("download-csv").classList.add("hidden");
+    el("download-ocr-csv").classList.add("hidden");
     el("summary").classList.add("hidden");
 
     const lang = el("lang-select").value;
@@ -243,17 +286,21 @@
           },
         });
       } catch (err) {
+        const errorText = `[OCR-fejl: ${err.message}]`;
+        state.ocrTexts.push({ foto: photo.file.name, ocrText: errorText });
         appendResultRow({
           foto: photo.file.name,
           status: "Ingen match",
           bedsteMatch: "",
           score: 0,
           id: "",
-          ocrExcerpt: `[OCR-fejl: ${err.message}]`,
+          ocrExcerpt: errorText,
           alleMatches: "",
         });
         continue;
       }
+
+      state.ocrTexts.push({ foto: photo.file.name, ocrText });
 
       const matches = findBestMatches(ocrText, titles, topN);
       let row;
@@ -292,6 +339,7 @@
 
     el("progress-wrap").classList.add("hidden");
     if (state.results.length) el("download-csv").classList.remove("hidden");
+    if (state.ocrTexts.length) el("download-ocr-csv").classList.remove("hidden");
     runButton.disabled = false;
   }
 
@@ -303,4 +351,6 @@
       el("progress-wrap").classList.add("hidden");
     });
   });
+
+  loadDefaultTitlesFile();
 })();
