@@ -1,5 +1,5 @@
 # bookscanner
-
+[https://ogiermontanus.github.io/bookscanner/](https://ogiermontanus.github.io/bookscanner/)
 Enkel app til at finde **sandsynlige dubletter** blandt fotograferede
 titelblade. Appen OCR-scanner et foto af hvert eksemplars titelblad og
 fuzzy-matcher teksten mod en eksisterende, struktureret titelliste (Excel).
