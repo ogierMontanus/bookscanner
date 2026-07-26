@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>bookscanner – dubletcheck af titelblade</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="page-header">
+    <h1>📚 bookscanner – dubletcheck af titelblade</h1>
+    <p class="subtitle">
+      Alt kører i din browser – ingen fotos eller data sendes til en server.
+      Fotos af titelblade OCR-scannes (Tesseract/WebAssembly) og
+      fuzzy-matches mod en eksisterende titelliste for at udpege
+      sandsynlige dubletter.
+    </p>
+  </header>
+
+  <main>
+    <section class="panel" id="settings-panel">
+      <h2>Indstillinger</h2>
+      <div class="settings-grid">
+        <label>
+          OCR-sprog
+          <select id="lang-select">
+            <option value="dan+eng" selected>Dansk + engelsk</option>
+            <option value="dan">Dansk</option>
+            <option value="eng">Engelsk</option>
+            <option value="deu">Tysk</option>
+            <option value="fra">Fransk</option>
+            <option value="lat">Latin</option>
+          </select>
+        </label>
+        <label>
+          Sidelayout
+          <select id="psm-select">
+            <option value="3">Auto</option>
+            <option value="6" selected>Samlet tekstblok (anbefalet)</option>
+            <option value="11">Spredt tekst</option>
+          </select>
+        </label>
+        <label>
+          Sandsynlig dublet ved score ≥
+          <input type="number" id="high-threshold" min="0" max="100" value="85" />
+        </label>
+        <label>
+          Mulig dublet ved score ≥
+          <input type="number" id="low-threshold" min="0" max="100" value="65" />
+        </label>
+        <label>
+          Top-N matches per foto
+          <input type="number" id="top-n" min="1" max="10" value="3" />
+        </label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>1. Struktureret titelliste (Excel)</h2>
+      <input type="file" id="excel-input" accept=".xlsx" />
+      <div id="sheet-picker-wrap" class="hidden">
+        <label>
+          Hvilket ark skal bruges?
+          <select id="sheet-select"></select>
+        </label>
+      </div>
+      <div id="column-picker-wrap" class="hidden">
+        <label>
+          Titel-kolonne
+          <select id="title-col-select"></select>
+        </label>
+        <label>
+          ID/signatur-kolonne (valgfri)
+          <select id="id-col-select"></select>
+        </label>
+      </div>
+      <div id="titles-status" class="status-line"></div>
+    </section>
+
+    <section class="panel">
+      <h2>2. Fotos af titelblade</h2>
+      <p class="hint">Ét foto per eksemplar. JPEG/PNG anbefales (TIFF understøttes ikke i alle browsere).</p>
+      <div id="dropzone" class="dropzone">
+        <p>Træk fotos hertil, eller</p>
+        <input type="file" id="photo-input" accept="image/*" multiple />
+      </div>
+      <div id="photo-preview" class="photo-preview"></div>
+    </section>
+
+    <section class="panel">
+      <button id="run-button" disabled>Kør matching</button>
+      <div id="progress-wrap" class="hidden">
+        <progress id="progress-bar" max="100" value="0"></progress>
+        <span id="progress-text"></span>
+      </div>
+    </section>
+
+    <section class="panel" id="results-panel">
+      <h2>Resultater</h2>
+      <div id="summary" class="summary hidden">
+        <div class="stat"><span id="stat-match" class="stat-value">0</span><span class="stat-label">Sandsynlige dubletter</span></div>
+        <div class="stat"><span id="stat-maybe" class="stat-value">0</span><span class="stat-label">Mulige dubletter</span></div>
+        <div class="stat"><span id="stat-total" class="stat-value">0</span><span class="stat-label">Fotos i alt</span></div>
+      </div>
+      <div class="table-wrap">
+        <table id="results-table">
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>Status</th>
+              <th>Bedste match</th>
+              <th>Score</th>
+              <th>ID/signatur</th>
+              <th>OCR-tekst (uddrag)</th>
+              <th>Alle top-matches</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+      <button id="download-csv" class="hidden">⬇️ Download resultat som CSV</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://github.com/ogierMontanus/bookscanner" target="_blank" rel="noopener">Kildekode</a>
+      – se README.md for dokumentation.
+    </p>
+  </footer>
+
+  <script src="vendor/tesseract.min.js"></script>
+  <script src="vendor/xlsx.full.min.js"></script>
+  <script src="js/matching.js"></script>
+  <script src="js/ocr.js"></script>
+  <script src="js/excel.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

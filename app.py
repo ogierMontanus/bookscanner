@@ -39,8 +39,12 @@ with st.sidebar:
     lang = lang_options[lang_choice]
 
     psm_choice = st.selectbox(
-        "Sidelayout", list(PSM_OPTIONS.keys()), index=0,
-        help="Prøv 'Spredt tekst' hvis titelbladet har titel/forfatter/forlag spredt ud over siden.",
+        "Sidelayout", list(PSM_OPTIONS.keys()), index=1,
+        help=(
+            "'Samlet tekstblok' fungerer bedst for de fleste titelblade i praksis. "
+            "'Auto' overser ofte store, spredte overskrifter. Prøv 'Spredt tekst' "
+            "hvis titel/forfatter/forlag er meget spredt ud over siden."
+        ),
     )
     psm = PSM_OPTIONS[psm_choice]
 
