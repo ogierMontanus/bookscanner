@@ -18,8 +18,8 @@ IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".heic", "
 # Uniform block of text works well for a single title page; sparse text
 # suits pages where title/author/publisher are scattered across the page.
 PSM_OPTIONS = {
-    "Auto (standard)": "3",
-    "Samlet tekstblok": "6",
+    "Auto": "3",
+    "Samlet tekstblok (anbefalet)": "6",
     "Spredt tekst": "11",
 }
 

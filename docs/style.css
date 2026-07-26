@@ -1,0 +1,283 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #5f6368;
+  --panel-bg: #f7f7f8;
+  --border: #dcdcdc;
+  --accent: #2563eb;
+  --accent-fg: #ffffff;
+  --match: #1a7f37;
+  --maybe: #b25e00;
+  --miss: #6b7280;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161a;
+    --fg: #eaeaea;
+    --muted: #9aa0a6;
+    --panel-bg: #1e2126;
+    --border: #333740;
+    --accent: #5b8def;
+    --accent-fg: #0b0d10;
+    --match: #4ade80;
+    --maybe: #fbbf24;
+    --miss: #9aa0a6;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.5;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 1.25rem 3rem;
+}
+
+.page-header {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 0.5rem;
+}
+
+.page-header h1 {
+  margin-bottom: 0.25rem;
+  font-size: 1.6rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  max-width: 65ch;
+}
+
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  margin: 1.25rem 0;
+}
+
+.panel h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+select,
+input[type="number"],
+input[type="file"] {
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+}
+
+#column-picker-wrap,
+#sheet-picker-wrap {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.status-line {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin-top: -0.25rem;
+}
+
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--muted);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dropzone.dragover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.photo-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.photo-thumb {
+  width: 90px;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.photo-thumb img {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+button {
+  font: inherit;
+  font-weight: 600;
+  background: var(--accent);
+  color: var(--accent-fg);
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.4rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+
+#progress-wrap {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+progress {
+  width: 240px;
+  height: 10px;
+}
+
+#progress-text {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.summary {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-match {
+  background: color-mix(in srgb, var(--match) 18%, transparent);
+  color: var(--match);
+}
+
+.badge-maybe {
+  background: color-mix(in srgb, var(--maybe) 18%, transparent);
+  color: var(--maybe);
+}
+
+.badge-miss {
+  background: color-mix(in srgb, var(--miss) 18%, transparent);
+  color: var(--miss);
+}
+
+#download-csv {
+  margin-top: 1rem;
+}
+
+footer {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 2rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+footer a {
+  color: var(--accent);
+}
